@@ -24,17 +24,35 @@
         </ul>
         <form class="form-inline my-2 my-lg-0" id="filters">
           <label class="font-weight-bold text-info mr-3">Filters</label>
-          <input type="radio" name="type" value="all" class="mx-1" />
+          <input
+            type="radio"
+            name="type"
+            v-model.number="check"
+            class="mx-1"
+            value="1"
+          />
           <label for="male" class="mb-0">All</label>
-          <input type="radio" name="type" value="completed" class="mx-1" />
+          <input
+            type="radio"
+            name="type"
+            v-model.number="check"
+            class="mx-1"
+            value="2"
+          />
           <label for="female" class="mb-0">Completed</label>
-          <input type="radio" name="type" value="uncompleted" class="mx-1" />
+          <input
+            type="radio"
+            name="type"
+            v-model.number="check"
+            class="mx-1"
+            value="3"
+          />
           <label for="other" class="mr-2 mb-0">Uncompleted</label>
 
           <input
             class="form-control mr-sm-2"
             type="search"
-            name="words"
+            v-model="words"
             placeholder="Words"
             aria-label="Search"
           />
@@ -42,6 +60,7 @@
             class="btn btn-outline-info my-2 my-sm-0"
             type="submit"
             id="search"
+            @click.prevent="filter()"
           >
             Search
           </button>
@@ -50,7 +69,7 @@
     </nav>
 
     <!-- Modal -->
-    
+
     <b-modal id="modal-1" title="BootstrapVue">
       <div class="modal-dialog modal-dialog-centered" role="document">
         <div class="modal-content">
@@ -69,7 +88,8 @@
           </div>
           <div class="modal-body">
             <div
-              class="alert alert-danger d-none"
+              class="alert alert-danger"
+              v-bind:class="{ 'd-none': hasError }"
               role="alert"
               id="modal-alert"
             >
@@ -87,7 +107,11 @@
               </div>
               <div class="form-group">
                 <label>Description</label>
-                <textarea class="form-control" v-model="modal_description" rows="3">
+                <textarea
+                  class="form-control"
+                  v-model="modal_description"
+                  rows="3"
+                >
                 </textarea>
               </div>
               <div class="form-group d-inline-flex">
@@ -106,7 +130,12 @@
             >
               Close
             </button>
-            <button type="button" class="btn btn-info" id="modal-btn">
+            <button
+              type="button"
+              class="btn btn-info"
+              id="modal-btn"
+              @click="saveModal()"
+            >
               Save
             </button>
           </div>
@@ -180,18 +209,30 @@
                 <th scope="col"></th>
               </tr>
               <tr v-for="(item, index) of todos" :key="item.id">
-                <th scope="col">{{ item.title }}</th>
-                <th scope="col">{{ item.description }}</th>
-                <th scope="col" class="text-center">
+                <th scope="col" v-bind:class="{ 'd-none': item.hasErrorRow }">
+                  {{ item.title }}
+                </th>
+                <th scope="col" v-bind:class="{ 'd-none': item.hasErrorRow }">
+                  {{ item.description }}
+                </th>
+                <th
+                  scope="col"
+                  class="text-center"
+                  v-bind:class="{ 'd-none': item.hasErrorRow }"
+                >
                   <input type="checkbox" id="checkbox" v-model="item.checked" />
                 </th>
-                <th scope="col" class="text-right">
-                  <b-button 
-                    v-b-modal.modal-1 
+                <th
+                  scope="col"
+                  class="text-right"
+                  v-bind:class="{ 'd-none': item.hasErrorRow }"
+                >
+                  <b-button
+                    v-b-modal.modal-1
                     variant="primary"
                     class=" mb-1 ml-1"
                     @click="edit(index)"
-                    >
+                  >
                     <i class="fa fa-pencil"></i>
                   </b-button>
                   <button
@@ -220,16 +261,21 @@ export default {
       title: "",
       description: "",
       checked: false,
+      hasErrorRow: false,
       hasError: true,
-      modal_title:"",
-      modal_description:"",
-      modal_completed:false,
+      modal_title: "",
+      modal_description: "",
+      modal_completed: false,
+      indexArray: 0,
+      words: "",
+      check: 1,
       todos: [
         {
           id: 0,
           title: "learn js",
           description: "watch js tutorials",
           checked: false,
+          hasErrorRow: false,
         },
       ],
     };
@@ -246,6 +292,7 @@ export default {
           title: this.title,
           description: this.description,
           checked: this.checked,
+          hasErrorRow: this.hasErrorRow,
         });
       }
       this.title = "";
@@ -255,9 +302,66 @@ export default {
       this.todos.splice(index, 1);
     },
     edit: function(index) {
-      this.modal_title=this.todos[index].title
-      this.modal_description=this.todos[index].description
-      this.modal_completed=this.todos[index].checked
+      this.modal_title = this.todos[index].title;
+      this.modal_description = this.todos[index].description;
+      this.modal_completed = this.todos[index].checked;
+      this.indexArray = this.todos[index].id;
+    },
+    saveModal: function() {
+      if (this.modal_title === "" || this.modal_description === "") {
+        this.hasError = false;
+      } else {
+        this.hasError = true;
+        this.todos[this.indexArray].id = this.indexArray;
+        this.todos[this.indexArray].title = this.modal_title;
+        this.todos[this.indexArray].description = this.modal_title;
+        this.todos[this.indexArray].checked = this.modal_title;
+      }
+    },
+    filter: function() {
+      console.log("test"+ this.check)
+      console.log(this.check == 1)
+      if (this.words.length > 0 && this.check == 1) {
+        console.log("test1 "+ this.check)
+        this.todos.forEach((value, index) => {
+          if (
+            !value.title.includes(this.words) ||
+            !value.description.includes(this.words)
+          ) {
+            value.hasErrorRow = true;
+          }
+        });
+      } else if (this.check == 1) {
+        this.todos.forEach((value, index) => {
+          value.hasErrorRow = false;
+        });
+      }
+
+      if (this.words.length > 0 && this.check == 2) {
+        console.log("2do if")
+        this.todos.forEach((value, index) => {
+          if (
+            !value.title.includes(this.words) ||
+            !value.description.includes(this.words) && 
+             value.checked
+          ) {
+            value.hasErrorRow = true;
+          }
+        });
+      }
+
+      if (this.words.length > 0 && this.check == 3) {
+        console.log("2do if")
+        this.todos.forEach((value, index) => {
+          if (
+            !value.title.includes(this.words) ||
+            !value.description.includes(this.words) &&
+            !value.checked
+          ) {
+            value.hasErrorRow = true;
+          }
+        });
+      }
     },
   },
 };
